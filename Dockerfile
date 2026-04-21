@@ -10,18 +10,23 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Aeneas strictly requires numpy to be installed first
+# 1. Upgrade core build tools first
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# 2. Install numpy independently so it exists in the system
 RUN pip install --no-cache-dir numpy==1.23.5
 
-# Copy requirements and install
+# Copy requirements
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+
+# 3. CRITICAL FIX: Add --no-build-isolation so Aeneas can see numpy during its installation
+RUN pip install --no-cache-dir --no-build-isolation -r requirements.txt
 
 # Copy the API script
 COPY main.py .
 
 # Expose API port
-EXPOSE 8009
+EXPOSE 8000
 
 # Start the FastAPI server
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8009"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
